@@ -4,6 +4,8 @@ import Image from "next/image";
 import { Watch, Ticket, MapPin, Bell, Zap, Star, Smartphone, ExternalLink } from "lucide-react";
 import { GithubIcon, AppleIcon } from "./icons";
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 const features = [
   { icon: Zap, title: "Live Activities", desc: "Dynamic Island" },
   { icon: Watch, title: "Apple Watch", desc: "Native watchOS" },
@@ -44,7 +46,7 @@ function LinioInfo() {
       <div className="flex items-start gap-6">
         <div className="relative">
           <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-[1.75rem] overflow-hidden shadow-2xl shadow-emerald-500/20 ring-1 ring-white/10">
-            <Image src="/images/linio-icon.png" alt="Linio" width={112} height={112} className="w-full h-full object-cover" />
+            <Image src={`${basePath}/images/linio-icon.png`} alt="Linio" width={112} height={112} className="w-full h-full object-cover" />
           </div>
           <div className="absolute -bottom-2 -right-2 bg-emerald-500 rounded-full p-1.5">
             <AppleIcon className="w-4 h-4 text-white" />
@@ -72,7 +74,7 @@ function ActionButtons() {
       <a href="https://apps.apple.com/app/linio/id6740141491" target="_blank" rel="noopener noreferrer"
         className="hover:scale-105 transition-transform">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/app-store-badge.svg" alt="Im App Store laden" className="h-12" />
+        <img src={`${basePath}/images/app-store-badge.svg`} alt="Im App Store laden" className="h-12" />
       </a>
       <a href="https://deltacore-labs.github.io/Linio-Mannheim-OEPNV/" target="_blank" rel="noopener noreferrer"
         className="inline-flex items-center gap-2 px-5 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl transition-colors">
