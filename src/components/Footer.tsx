@@ -9,7 +9,7 @@ export function Footer() {
   return (
     <footer className="relative border-t border-neutral-800 bg-neutral-950">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
@@ -50,6 +50,31 @@ export function Footer() {
                   className="text-sm text-neutral-400 hover:text-white transition-colors"
                 >
                   Safari AI Agent
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Rechtliches */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-semibold text-white uppercase tracking-wider">
+              Rechtliches
+            </h4>
+            <ul className="space-y-2">
+              <li>
+                <a
+                  href="/impressum"
+                  className="text-sm text-neutral-400 hover:text-white transition-colors"
+                >
+                  Impressum
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/datenschutz"
+                  className="text-sm text-neutral-400 hover:text-white transition-colors"
+                >
+                  Datenschutz
                 </a>
               </li>
             </ul>
