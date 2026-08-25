@@ -68,18 +68,18 @@ function LinioInfo() {
 
 function ActionButtons() {
   return (
-    <div className="flex flex-wrap gap-4">
+    <div className="flex flex-wrap items-center gap-4">
       <a href="https://apps.apple.com/app/linio/id6740141491" target="_blank" rel="noopener noreferrer"
-        className="inline-flex items-center gap-3 px-6 py-3.5 bg-white text-black rounded-xl font-semibold hover:scale-105 transition-transform shadow-lg">
-        <AppleIcon className="w-6 h-6" />
-        <span className="text-left"><span className="text-[10px] block opacity-70">Laden im</span><span className="text-sm">App Store</span></span>
+        className="hover:scale-105 transition-transform">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/images/app-store-badge.svg" alt="Im App Store laden" className="h-12" />
       </a>
       <a href="https://deltacore-labs.github.io/Linio-Mannheim-OEPNV/" target="_blank" rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 px-5 py-3.5 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl transition-colors">
+        className="inline-flex items-center gap-2 px-5 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl transition-colors">
         <ExternalLink className="w-5 h-5" />Website
       </a>
       <a href="https://github.com/deltacore-labs/Linio-Mannheim-OEPNV" target="_blank" rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 px-5 py-3.5 border border-neutral-700 hover:bg-neutral-800/50 text-neutral-300 rounded-xl transition-colors">
+        className="inline-flex items-center gap-2 px-5 py-3 border border-neutral-700 hover:bg-neutral-800/50 text-neutral-300 rounded-xl transition-colors">
         <GithubIcon className="w-5 h-5" />GitHub
       </a>
     </div>
