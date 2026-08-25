@@ -1,7 +1,7 @@
 "use client";
 
 import { Mail, Heart } from "lucide-react";
-import { GithubIcon } from "./icons";
+import { GithubIcon, InstagramIcon } from "./icons";
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -94,6 +94,15 @@ export function Footer() {
                 aria-label="GitHub"
               >
                 <GithubIcon />
+              </a>
+              <a
+                href="https://www.instagram.com/delta.corelabs/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2.5 rounded-lg bg-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-700 transition-colors"
+                aria-label="Instagram"
+              >
+                <InstagramIcon />
               </a>
               <a
                 href="mailto:delta.corelabs@gmail.com"
