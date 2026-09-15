@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Mail, Heart } from "lucide-react";
 import { GithubIcon, InstagramIcon } from "./icons";
 
@@ -62,20 +63,20 @@ export function Footer() {
             </h4>
             <ul className="space-y-2">
               <li>
-                <a
+                <Link
                   href="/impressum"
                   className="text-sm text-neutral-400 hover:text-white transition-colors"
                 >
                   Impressum
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   href="/datenschutz"
                   className="text-sm text-neutral-400 hover:text-white transition-colors"
                 >
                   Datenschutz
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
