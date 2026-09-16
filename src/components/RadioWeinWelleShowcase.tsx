@@ -11,6 +11,7 @@ import { GithubIcon, AppleIcon } from "./icons";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 const STREAM_URL = "https://stream.radio-wein-welle.de/radioweinwelle_high";
 const METADATA_URL = "https://stream.radio-wein-welle.de/status-json.xsl";
+const PLAYLIST_URL = "https://www.radio-wein-welle.de/playlist";
 
 const features = [
   { icon: Radio,      title: "Live Stream",   desc: "Icecast HQ" },
@@ -159,6 +160,7 @@ function PlayerCard() {
   }, []);
 
   const fetchMetadata = useCallback(async () => {
+    // Primary: Icecast status JSON
     try {
       const res = await fetch(METADATA_URL, { cache: "no-store" });
       const data = await res.json() as {
@@ -170,10 +172,29 @@ function PlayerCard() {
       const parts = raw.split(" - ");
       const artist = parts.length > 1 ? parts[0].trim() : "";
       const title = parts.length > 1 ? parts.slice(1).join(" - ").trim() : raw.trim();
-      setNowPlaying({ title, artist });
-      if (title || artist) fetchArtwork(`${artist} ${title}`.trim());
+      if (title || artist) {
+        setNowPlaying({ title, artist });
+        fetchArtwork(`${artist} ${title}`.trim());
+        return;
+      }
     } catch {
-      // CORS or network failure — metadata stays empty, audio keeps playing
+      // fall through to playlist fallback
+    }
+
+    // Fallback: parse playlist page HTML
+    try {
+      const res = await fetch(PLAYLIST_URL, { cache: "no-store" });
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      const title = doc.querySelector("h4")?.textContent?.trim() ?? "";
+      const raw = doc.querySelector("h6")?.textContent?.trim() ?? "";
+      const artist = raw.startsWith("von ") ? raw.slice(4).trim() : raw;
+      if (title || artist) {
+        setNowPlaying({ title, artist });
+        fetchArtwork(`${artist} ${title}`.trim());
+      }
+    } catch {
+      // both sources failed — metadata stays empty
     }
   }, [fetchArtwork]);
 
