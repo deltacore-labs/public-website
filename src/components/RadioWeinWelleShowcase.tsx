@@ -1,10 +1,14 @@
 "use client";
 
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Radio, Music, Disc3, Smartphone, Wifi, Lock,
-  ExternalLink,
+  Play, Square, ExternalLink,
 } from "lucide-react";
 import { GithubIcon, AppleIcon } from "./icons";
+
+const STREAM_URL = "https://stream.radio-wein-welle.de/radioweinwelle_high";
+const METADATA_URL = "https://stream.radio-wein-welle.de/status-json.xsl";
 
 const features = [
   { icon: Radio,      title: "Live Stream",  desc: "Icecast HQ" },
@@ -117,11 +121,161 @@ function FeatureGrid() {
   );
 }
 
-// PlayerCard — placeholder replaced in Task 2
+type PlayState = "idle" | "loading" | "playing" | "stopped";
+
+interface NowPlaying {
+  title: string;
+  artist: string;
+}
+
 function PlayerCard() {
+  const [playState, setPlayState] = useState<PlayState>("idle");
+  const [nowPlaying, setNowPlaying] = useState<NowPlaying>({ title: "", artist: "" });
+  const [artworkUrl, setArtworkUrl] = useState<string>("");
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const fetchArtwork = useCallback(async (query: string) => {
+    try {
+      const encoded = encodeURIComponent(query);
+      const res = await fetch(
+        `https://itunes.apple.com/search?term=${encoded}&media=music&limit=1&country=DE`,
+        { cache: "no-store" }
+      );
+      const data = await res.json() as { results?: Array<{ artworkUrl100?: string }> };
+      const url = data?.results?.[0]?.artworkUrl100;
+      if (url) setArtworkUrl(url.replace("100x100bb", "600x600bb"));
+    } catch {
+      // artwork stays empty
+    }
+  }, []);
+
+  const fetchMetadata = useCallback(async () => {
+    try {
+      const res = await fetch(METADATA_URL, { cache: "no-store" });
+      const data = await res.json() as {
+        icestats?: { source?: { title?: string } | Array<{ title?: string }> };
+      };
+      const source = data?.icestats?.source;
+      const entry = Array.isArray(source) ? source[0] : source;
+      const raw = entry?.title ?? "";
+      const parts = raw.split(" - ");
+      const artist = parts.length > 1 ? parts[0].trim() : "";
+      const title = parts.length > 1 ? parts.slice(1).join(" - ").trim() : raw.trim();
+      setNowPlaying({ title, artist });
+      if (title || artist) fetchArtwork(`${artist} ${title}`.trim());
+    } catch {
+      // CORS or network failure — metadata stays empty, audio keeps playing
+    }
+  }, [fetchArtwork]);
+
+  const stopPolling = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+  }, []);
+
+  const startPolling = useCallback(() => {
+    fetchMetadata();
+    intervalRef.current = setInterval(fetchMetadata, 15000);
+  }, [fetchMetadata]);
+
+  const togglePlay = useCallback(() => {
+    if (playState === "playing") {
+      audioRef.current?.pause();
+      stopPolling();
+      setPlayState("stopped");
+      return;
+    }
+
+    if (!audioRef.current) {
+      const audio = new Audio(STREAM_URL);
+      audio.addEventListener("playing", () => {
+        setPlayState("playing");
+        startPolling();
+      });
+      audio.addEventListener("error", () => setPlayState("stopped"));
+      audio.addEventListener("waiting", () => setPlayState("loading"));
+      audioRef.current = audio;
+    }
+
+    setPlayState("loading");
+    audioRef.current.play().catch(() => setPlayState("stopped"));
+  }, [playState, startPolling, stopPolling]);
+
+  useEffect(() => {
+    return () => {
+      audioRef.current?.pause();
+      stopPolling();
+    };
+  }, [stopPolling]);
+
+  const isPlaying = playState === "playing";
+  const isLoading = playState === "loading";
+
   return (
-    <div className="relative rounded-3xl bg-gradient-to-br from-rose-950/80 to-red-950/80 border border-rose-800/30 p-8 flex items-center justify-center min-h-[320px]">
-      <p className="text-rose-400/60 text-sm">Wird in Task 2 ersetzt</p>
+    <div className="relative">
+      <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+        <div className="absolute top-4 left-4 w-48 h-48 bg-rose-600/20 rounded-full blur-3xl animate-pulse" />
+        <div
+          className="absolute bottom-4 right-4 w-40 h-40 bg-red-700/20 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        />
+      </div>
+
+      <div className="relative rounded-3xl bg-gradient-to-br from-rose-950/80 to-red-950/80 border border-rose-800/30 backdrop-blur-xl p-8 shadow-2xl shadow-rose-900/30">
+        <div className="flex flex-col items-center gap-6">
+          <div className="relative">
+            {artworkUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={artworkUrl}
+                alt="Album Cover"
+                className="w-40 h-40 rounded-2xl object-cover shadow-xl shadow-black/50"
+              />
+            ) : (
+              <div className="w-40 h-40 rounded-2xl bg-rose-900/50 border border-rose-700/30 flex items-center justify-center">
+                <Radio className="w-16 h-16 text-rose-400/40" />
+              </div>
+            )}
+            <div className="absolute -top-2 -right-2 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-600 text-white text-xs font-bold shadow-lg">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+              </span>
+              LIVE
+            </div>
+          </div>
+
+          <div className="text-center w-full overflow-hidden">
+            <p className="font-semibold text-white text-lg truncate">
+              {nowPlaying.title || "Radio Wein-Welle"}
+            </p>
+            <p className="text-sm text-rose-300/60 mt-1 truncate">
+              {nowPlaying.artist || "Jetzt live"}
+            </p>
+          </div>
+
+          <button
+            onClick={togglePlay}
+            disabled={isLoading}
+            aria-label={isPlaying ? "Stop" : "Play"}
+            className="w-16 h-16 rounded-full bg-rose-600 hover:bg-rose-500 disabled:bg-rose-800 flex items-center justify-center shadow-lg shadow-rose-900/50 transition-all hover:scale-105 active:scale-95 disabled:scale-100 cursor-pointer disabled:cursor-wait"
+          >
+            {isLoading ? (
+              <svg className="w-6 h-6 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+            ) : isPlaying ? (
+              <Square className="w-6 h-6 text-white fill-white" />
+            ) : (
+              <Play className="w-6 h-6 text-white fill-white ml-0.5" />
+            )}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
