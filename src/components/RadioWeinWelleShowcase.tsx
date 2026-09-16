@@ -5,8 +5,10 @@ import {
   Radio, Music, Disc3, Smartphone, Wifi, Lock,
   Play, Square, ExternalLink,
 } from "lucide-react";
+import Image from "next/image";
 import { GithubIcon, AppleIcon } from "./icons";
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 const STREAM_URL = "https://stream.radio-wein-welle.de/radioweinwelle_high";
 const METADATA_URL = "https://stream.radio-wein-welle.de/status-json.xsl";
 
@@ -50,8 +52,8 @@ function RadioWeinWelleInfo() {
     <div className="space-y-8">
       <div className="flex items-start gap-6">
         <div className="relative">
-          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-[1.75rem] overflow-hidden shadow-2xl shadow-rose-500/20 ring-1 ring-white/10 bg-gradient-to-br from-rose-800 to-red-950 flex items-center justify-center">
-            <Radio className="w-12 h-12 text-rose-200" />
+          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-[1.75rem] overflow-hidden shadow-2xl shadow-rose-500/20 ring-1 ring-white/10">
+            <Image src={`${basePath}/images/radio-weinwelle-icon.png`} alt="Radio Wein-Welle" width={112} height={112} className="w-full h-full object-cover" />
           </div>
           <div className="absolute -bottom-2 -right-2 bg-rose-600 rounded-full p-1.5">
             <AppleIcon className="w-4 h-4 text-white" />
@@ -235,8 +237,8 @@ function PlayerCard() {
                 className="w-40 h-40 rounded-2xl object-cover shadow-xl shadow-black/50"
               />
             ) : (
-              <div className="w-40 h-40 rounded-2xl bg-rose-900/50 border border-rose-700/30 flex items-center justify-center">
-                <Radio className="w-16 h-16 text-rose-400/40" />
+              <div className="w-40 h-40 rounded-2xl overflow-hidden shadow-xl shadow-black/50">
+                <Image src={`${basePath}/images/radio-weinwelle-icon.png`} alt="Radio Wein-Welle" width={160} height={160} className="w-full h-full object-cover" />
               </div>
             )}
             <div className="absolute -top-2 -right-2 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-600 text-white text-xs font-bold shadow-lg">
