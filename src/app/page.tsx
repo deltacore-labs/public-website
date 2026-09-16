@@ -1,6 +1,7 @@
 import { Header } from "@/components/Header";
 import { Hero } from "@/components/Hero";
 import { LinioShowcase } from "@/components/LinioShowcase";
+import { RadioWeinWelleShowcase } from "@/components/RadioWeinWelleShowcase";
 import { ProjectCard } from "@/components/ProjectCard";
 import { Footer } from "@/components/Footer";
 import { otherProjects } from "@/data/projects";
@@ -16,6 +17,7 @@ export default function Home() {
       {/* Linio Featured Section */}
       <div id="projects">
         <LinioShowcase />
+        <RadioWeinWelleShowcase />
       </div>
 
       {/* Other Projects Section */}
