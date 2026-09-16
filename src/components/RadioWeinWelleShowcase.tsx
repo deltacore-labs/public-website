@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   Radio, Music, Disc3, Smartphone, Wifi, Lock,
-  Play, Square, ExternalLink,
+  Play, Square, ExternalLink, WifiOff,
 } from "lucide-react";
 import Image from "next/image";
 import { GithubIcon, AppleIcon } from "./icons";
@@ -13,12 +13,12 @@ const STREAM_URL = "https://stream.radio-wein-welle.de/radioweinwelle_high";
 const METADATA_URL = "https://stream.radio-wein-welle.de/status-json.xsl";
 
 const features = [
-  { icon: Radio,      title: "Live Stream",  desc: "Icecast HQ" },
-  { icon: Music,      title: "Song-Info",    desc: "Echtzeit-Metadaten" },
-  { icon: Disc3,      title: "Cover Art",    desc: "iTunes API" },
-  { icon: Smartphone, title: "iOS & macOS",  desc: "Native App" },
-  { icon: Wifi,       title: "Kostenlos",    desc: "Werbefrei" },
-  { icon: Lock,       title: "Lock Screen",  desc: "Control Center" },
+  { icon: Radio,      title: "Live Stream",   desc: "Icecast HQ" },
+  { icon: Music,      title: "Song-Info",     desc: "Echtzeit-Metadaten" },
+  { icon: Disc3,      title: "Cover Art",     desc: "iTunes API" },
+  { icon: Smartphone, title: "iOS & macOS",   desc: "Native App" },
+  { icon: Wifi,       title: "Kostenlos",     desc: "Werbefrei" },
+  { icon: Lock,       title: "Lock Screen",   desc: "Control Center" },
 ];
 
 export function RadioWeinWelleShowcase() {
@@ -32,7 +32,7 @@ export function RadioWeinWelleShowcase() {
         <div className="text-center mb-8">
           <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm font-medium">
             <Radio className="w-4 h-4" />
-            Open Source · iOS &amp; macOS
+            Event-Radio · Winzerfest Groß-Umstadt
           </span>
         </div>
 
@@ -53,7 +53,13 @@ function RadioWeinWelleInfo() {
       <div className="flex items-start gap-6">
         <div className="relative">
           <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-[1.75rem] overflow-hidden shadow-2xl shadow-rose-500/20 ring-1 ring-white/10">
-            <Image src={`${basePath}/images/radio-weinwelle-icon.png`} alt="Radio Wein-Welle" width={112} height={112} className="w-full h-full object-cover" />
+            <Image
+              src={`${basePath}/images/radio-weinwelle-icon.png`}
+              alt="Radio Wein-Welle"
+              width={112}
+              height={112}
+              className="w-full h-full object-cover"
+            />
           </div>
           <div className="absolute -bottom-2 -right-2 bg-rose-600 rounded-full p-1.5">
             <AppleIcon className="w-4 h-4 text-white" />
@@ -63,14 +69,14 @@ function RadioWeinWelleInfo() {
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2">
             Radio Wein-Welle
           </h2>
-          <p className="text-rose-400 font-medium">Dein Regionalradio</p>
-          <p className="text-sm text-neutral-400">Pfalz · Kostenlos · Open Source</p>
+          <p className="text-rose-400 font-medium">Winzerfest Groß-Umstadt</p>
+          <p className="text-sm text-neutral-400">Groß-Umstadt · Jährliches Event · Open Source</p>
         </div>
       </div>
 
       <p className="text-lg text-neutral-300">
-        Streame Radio Wein-Welle direkt im Browser — oder lade die native App für{" "}
-        <span className="text-rose-400">iOS &amp; macOS.</span>
+        Das Event-Radio des Winzerfests in Groß-Umstadt — nur während des Fests on air.
+        Nativ auf <span className="text-rose-400">iOS &amp; macOS</span>, oder direkt hier im Browser.
       </p>
 
       <ActionButtons />
@@ -123,7 +129,7 @@ function FeatureGrid() {
   );
 }
 
-type PlayState = "idle" | "loading" | "playing" | "stopped";
+type PlayState = "idle" | "loading" | "playing" | "stopped" | "error";
 
 interface NowPlaying {
   title: string;
@@ -191,19 +197,26 @@ function PlayerCard() {
       return;
     }
 
-    if (!audioRef.current) {
-      const audio = new Audio(STREAM_URL);
-      audio.addEventListener("playing", () => {
-        setPlayState("playing");
-        startPolling();
-      });
-      audio.addEventListener("error", () => setPlayState("stopped"));
-      audio.addEventListener("waiting", () => setPlayState("loading"));
-      audioRef.current = audio;
+    // Allow retry from error state
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
     }
 
+    const audio = new Audio(STREAM_URL);
+    audio.addEventListener("playing", () => {
+      setPlayState("playing");
+      startPolling();
+    });
+    audio.addEventListener("error", () => {
+      stopPolling();
+      setPlayState("error");
+    });
+    audio.addEventListener("waiting", () => setPlayState("loading"));
+    audioRef.current = audio;
+
     setPlayState("loading");
-    audioRef.current.play().catch(() => setPlayState("stopped"));
+    audio.play().catch(() => setPlayState("error"));
   }, [playState, startPolling, stopPolling]);
 
   useEffect(() => {
@@ -215,6 +228,7 @@ function PlayerCard() {
 
   const isPlaying = playState === "playing";
   const isLoading = playState === "loading";
+  const isError = playState === "error";
 
   return (
     <div className="relative">
@@ -228,8 +242,10 @@ function PlayerCard() {
 
       <div className="relative rounded-3xl bg-gradient-to-br from-rose-950/80 to-red-950/80 border border-rose-800/30 backdrop-blur-xl p-8 shadow-2xl shadow-rose-900/30">
         <div className="flex flex-col items-center gap-6">
+
+          {/* Album artwork */}
           <div className="relative">
-            {artworkUrl ? (
+            {artworkUrl && isPlaying ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={artworkUrl}
@@ -237,28 +253,57 @@ function PlayerCard() {
                 className="w-40 h-40 rounded-2xl object-cover shadow-xl shadow-black/50"
               />
             ) : (
-              <div className="w-40 h-40 rounded-2xl overflow-hidden shadow-xl shadow-black/50">
-                <Image src={`${basePath}/images/radio-weinwelle-icon.png`} alt="Radio Wein-Welle" width={160} height={160} className="w-full h-full object-cover" />
+              <div className={`w-40 h-40 rounded-2xl overflow-hidden shadow-xl shadow-black/50 ${isError ? "opacity-30 grayscale" : ""} transition-all`}>
+                <Image
+                  src={`${basePath}/images/radio-weinwelle-icon.png`}
+                  alt="Radio Wein-Welle"
+                  width={160}
+                  height={160}
+                  className="w-full h-full object-cover"
+                />
               </div>
             )}
-            <div className="absolute -top-2 -right-2 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-600 text-white text-xs font-bold shadow-lg">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
-              </span>
-              LIVE
-            </div>
+
+            {/* LIVE badge — only when actually playing */}
+            {isPlaying && (
+              <div className="absolute -top-2 -right-2 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-600 text-white text-xs font-bold shadow-lg">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+                </span>
+                LIVE
+              </div>
+            )}
+
+            {/* Offline badge */}
+            {isError && (
+              <div className="absolute -top-2 -right-2 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-700 text-neutral-400 text-xs font-bold shadow-lg">
+                <WifiOff className="w-3 h-3" />
+                Offline
+              </div>
+            )}
           </div>
 
+          {/* Track info */}
           <div className="text-center w-full overflow-hidden">
-            <p className="font-semibold text-white text-lg truncate">
-              {nowPlaying.title || "Radio Wein-Welle"}
-            </p>
-            <p className="text-sm text-rose-300/60 mt-1 truncate">
-              {nowPlaying.artist || "Jetzt live"}
-            </p>
+            {isError ? (
+              <>
+                <p className="font-semibold text-neutral-400 text-lg">Sendet gerade nicht</p>
+                <p className="text-sm text-neutral-600 mt-1">Nur während des Winzerfests on air</p>
+              </>
+            ) : (
+              <>
+                <p className="font-semibold text-white text-lg truncate">
+                  {nowPlaying.title || "Radio Wein-Welle"}
+                </p>
+                <p className="text-sm text-rose-300/60 mt-1 truncate">
+                  {nowPlaying.artist || "Jetzt live"}
+                </p>
+              </>
+            )}
           </div>
 
+          {/* Play / Stop button */}
           <button
             onClick={togglePlay}
             disabled={isLoading}
@@ -286,8 +331,8 @@ function StatsBar() {
   return (
     <div className="mt-16 p-6 rounded-2xl bg-neutral-900/30 border border-neutral-800 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
       <div>
-        <div className="text-2xl font-bold text-rose-400">HQ</div>
-        <div className="text-sm text-neutral-500">Stream</div>
+        <div className="text-2xl font-bold text-rose-400">Event</div>
+        <div className="text-sm text-neutral-500">Winzerfest</div>
       </div>
       <div>
         <div className="text-2xl font-bold text-white">100%</div>
