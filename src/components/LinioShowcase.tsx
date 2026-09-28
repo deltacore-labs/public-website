@@ -78,7 +78,7 @@ function ActionButtons() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={`${basePath}/images/app-store-badge.svg`} alt="Im App Store laden" className="h-12" />
       </a>
-      <a href="https://deltacore-labs.github.io/Linio-Mannheim-OEPNV/" target="_blank" rel="noopener noreferrer"
+      <a href="https://linio.deltacorelabs.de" target="_blank" rel="noopener noreferrer"
         className="inline-flex items-center gap-2 px-5 py-3 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl transition-colors">
         <ExternalLink className="w-5 h-5" />Website
       </a>
